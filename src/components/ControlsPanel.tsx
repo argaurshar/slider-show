@@ -5,7 +5,10 @@ import {
   ArrowDown,
   ArrowUp,
   Blend,
+  Circle,
+  Columns3,
   MoveHorizontal,
+  Slash,
   SquareSplitHorizontal,
 } from 'lucide-react';
 import { useProjectStore } from '../state/useProjectStore';
@@ -40,6 +43,17 @@ export function ControlsPanel() {
   } = useProjectStore();
 
   const isHorizontal = config.direction === 'ltr' || config.direction === 'rtl';
+  // Transitions that move along an axis expose a direction control.
+  const hasDirection =
+    config.transition === 'reveal' ||
+    config.transition === 'push' ||
+    config.transition === 'diagonal' ||
+    config.transition === 'blinds';
+  // Transitions that draw an editable edge/line.
+  const hasEdge =
+    config.transition === 'reveal' ||
+    config.transition === 'circle' ||
+    config.transition === 'diagonal';
 
   return (
     <div className="space-y-6">
@@ -103,9 +117,12 @@ export function ControlsPanel() {
             { value: 'reveal', label: 'Reveal', icon: <SquareSplitHorizontal size={14} /> },
             { value: 'push', label: 'Slide', icon: <MoveHorizontal size={14} /> },
             { value: 'fade', label: 'Fade', icon: <Blend size={14} /> },
+            { value: 'circle', label: 'Circle', icon: <Circle size={14} /> },
+            { value: 'diagonal', label: 'Diagonal', icon: <Slash size={14} /> },
+            { value: 'blinds', label: 'Blinds', icon: <Columns3 size={14} /> },
           ]}
         />
-        {config.transition !== 'fade' && (
+        {hasDirection && (
           <Field label="Direction">
             <Segmented<Direction>
               value={config.direction}
@@ -191,9 +208,14 @@ export function ControlsPanel() {
             { value: 'pingpong', label: 'Ping-pong' },
           ]}
         />
+        <Toggle
+          label="Ken-Burns zoom"
+          checked={config.kenBurns}
+          onChange={(kenBurns) => updateConfig({ kenBurns })}
+        />
       </Section>
 
-      {config.transition !== 'fade' && config.transition !== 'push' && (
+      {hasEdge && (
         <Section title="Slider style">
           <div className="grid grid-cols-2 gap-3">
             <ColorControl
@@ -210,12 +232,14 @@ export function ControlsPanel() {
               onChange={(width) => updateConfig({ line: { ...config.line, width } })}
             />
           </div>
-          <Toggle
-            label="Show handle"
-            checked={config.handle.enabled}
-            onChange={(enabled) => updateConfig({ handle: { ...config.handle, enabled } })}
-          />
-          {config.handle.enabled && (
+          {config.transition === 'reveal' && (
+            <Toggle
+              label="Show handle"
+              checked={config.handle.enabled}
+              onChange={(enabled) => updateConfig({ handle: { ...config.handle, enabled } })}
+            />
+          )}
+          {config.transition === 'reveal' && config.handle.enabled && (
             <div className="space-y-3 rounded-xl bg-ink-800/60 p-3">
               <Segmented<'arrows' | 'dot' | 'none'>
                 value={config.handle.icon}
