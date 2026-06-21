@@ -195,7 +195,8 @@ two images + progress(0..1) + SliderConfig ──► renderFrame() ──► one
 
 **Phase 2 — Beauty & reach**
 - ✅ More transitions (circle / diagonal / blinds wipes) + Ken-Burns zoom drift.
-- ffmpeg.wasm fallback → MP4 everywhere (Safari/Firefox). *(next)*
+- ✅ ffmpeg.wasm fallback → real MP4 everywhere (Safari/Firefox), self-hosted
+  single-thread core, no cross-origin isolation required.
 - Caption/title overlay — deferred per product decision (later phase).
 
 **Phase 3 — Audio & sharing**

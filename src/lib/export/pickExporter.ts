@@ -1,13 +1,23 @@
 import type { SliderConfig } from '../../types/project';
 import type { Exporter } from './exporter';
 import { webcodecsExporter } from './webcodecsExporter';
+import { ffmpegExporter } from './ffmpegExporter';
 import { mediaRecorderExporter } from './mediaRecorderExporter';
 
-/** Preference order: true MP4 via WebCodecs, then a WebM MediaRecorder fallback. */
-const EXPORTERS: Exporter[] = [webcodecsExporter, mediaRecorderExporter];
+/**
+ * Preference order:
+ * 1. WebCodecs H.264 — fast, native MP4 (Chrome/Edge).
+ * 2. ffmpeg.wasm — real MP4 everywhere else (Safari/Firefox), slower.
+ * 3. MediaRecorder — last-resort WebM if WebAssembly itself is unavailable.
+ */
+const EXPORTERS: Exporter[] = [webcodecsExporter, ffmpegExporter, mediaRecorderExporter];
 
-export async function pickExporter(config: SliderConfig): Promise<Exporter | null> {
-  for (const exporter of EXPORTERS) {
+/** Return the first exporter that reports support for `config`, or null. */
+export async function firstSupported(
+  exporters: Exporter[],
+  config: SliderConfig,
+): Promise<Exporter | null> {
+  for (const exporter of exporters) {
     try {
       if (await exporter.isSupported(config)) return exporter;
     } catch {
@@ -15,6 +25,10 @@ export async function pickExporter(config: SliderConfig): Promise<Exporter | nul
     }
   }
   return null;
+}
+
+export async function pickExporter(config: SliderConfig): Promise<Exporter | null> {
+  return firstSupported(EXPORTERS, config);
 }
 
 export function downloadBlob(blob: Blob, fileName: string): void {

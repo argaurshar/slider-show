@@ -144,6 +144,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       });
       downloadBlob(result.blob, fileName);
     } catch (err) {
+      console.error('[export]', err);
       const message = err instanceof Error ? err.message : 'Export failed.';
       const aborted = err instanceof Error && err.name === 'AbortError';
       set({
