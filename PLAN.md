@@ -35,9 +35,9 @@ The experience must be:
 | "per their social media platform requirement" | Platform-labelled presets + safe-area guides | §5.2, §6 |
 | "make it beautiful and better" | More transitions, themes, captions, music | §6 |
 
-> **Decision needed (low stakes):** "9 to 15" most likely means the **9:16**
-> vertical format. We will treat 9:16 as the default *and* offer a 9–15 second
-> duration range, so both readings are satisfied.
+> **Resolved (2026-06-21):** The **user selects the output format** in the UI.
+> The two target platforms are **Reel (9:16)** and **YouTube (16:9)** — both
+> featured as the primary format choices, with other sizes still available.
 
 ---
 
@@ -229,13 +229,17 @@ commit + PR.
 
 ---
 
-## 11. Open questions for the user
+## 11. Confirmed decisions (2026-06-21)
 
-1. **"9 to 15"** — confirm: vertical **9:16 format**, a **9–15 second**
-   duration range, or both? (Plan currently does both.)
-2. Which platforms matter most? (Drives which presets ship first.)
-3. Are **captions** and **background music** in-scope for v1, or later?
-4. Any brand styling (colors/logo watermark) you'd want as a default template?
+1. **Format is user-selected** in the UI. ✅
+2. **Target platforms: Reel (9:16) + YouTube (16:9)**, featured first; other
+   sizes remain available. ✅
+3. **No captions, no background music** in v1 — deferred to a later phase. ✅
+4. **No branding/watermark** — images only for now. ✅
+
+This narrows v1 scope to: two-image input → pick format → tune motion/style →
+download a real video. The existing MVP already covers this; v1 work is
+focusing the format choices and polish, not new subsystems.
 
 ---
 
