@@ -14,8 +14,9 @@ leave your device; rendering and video encoding happen client-side.
 - **Full customization** — duration, start/end holds, frame rate (24/30/60),
   easing, loop / ping-pong, slider line color & width, handle style (arrows / dot
   / plain) and colors, and backdrop fill.
-- **Real video download** — exports a true **MP4 (H.264)** where supported, with a
-  WebM fallback. The download starts automatically and you get an in-app preview.
+- **Real MP4 on every browser** — WebCodecs H.264 where available (Chrome/Edge),
+  with an **ffmpeg.wasm** fallback that produces a real MP4 on Safari/Firefox too.
+  The download starts automatically and you get an in-app preview.
 - **Live, WYSIWYG preview** — the on-screen preview uses the exact same renderer as
   the exporter, so what you see is what you download.
 
@@ -31,8 +32,14 @@ Video export is capability-routed (`src/lib/export/pickExporter.ts`):
 1. **WebCodecs `VideoEncoder` (H.264) + `mp4-muxer`** — primary path. Frames are
    rendered offline and encoded deterministically to a real MP4 with exact
    duration. (Chrome/Edge/Android and modern Chromium.)
-2. **`MediaRecorder` + `canvas.captureStream()`** — WebM fallback for browsers
-   without WebCodecs H.264 encode. The UI flags WebM output (iOS Safari can't play it).
+2. **ffmpeg.wasm (`libx264`)** — MP4 fallback for browsers without WebCodecs H.264
+   (Safari/Firefox). Frames are rendered to JPEGs and encoded to H.264. The
+   single-thread core is **self-hosted** (`vite.config.ts` copies it into
+   `dist/ffmpeg/` and serves it same-origin) and loaded lazily, so nothing
+   downloads until such a browser actually exports — and no cross-origin
+   isolation is needed.
+3. **`MediaRecorder` + `canvas.captureStream()`** — last-resort WebM, only if
+   WebAssembly itself is unavailable.
 
 Images are decoded with EXIF orientation baked in and downscaled to bound memory.
 All compositing uses `object-fit: cover` math (`src/lib/image/coverRect.ts`) so any
@@ -48,11 +55,10 @@ npm test           # vitest (pure render/geometry/easing logic)
 npm run build      # tsc + vite build -> dist/
 ```
 
-> **Note on headers:** WebCodecs and a (future) multithreaded ffmpeg.wasm fallback
-> benefit from cross-origin isolation. The dev server (`vite.config.ts`) and the
-> production hosts (`vercel.json`, `public/_headers`) set
-> `Cross-Origin-Opener-Policy: same-origin` and
-> `Cross-Origin-Embedder-Policy: require-corp`.
+> **Note on headers:** the app runs **without** cross-origin isolation. WebCodecs
+> encode doesn't need it, and `COEP: require-corp` actually *blocks* the Web Worker
+> that the single-thread ffmpeg.wasm fallback spawns — so no COOP/COEP headers are
+> set anywhere. This also matches GitHub Pages, which can't set custom headers.
 
 ## Deploy
 
@@ -79,7 +85,6 @@ tests/          coverRect, easing, sliderGeometry
 
 ## Roadmap
 
-- ffmpeg.wasm fallback so Safari/Firefox also get MP4 (instead of WebM).
 - Focal-point crop adjustment per image.
 - Optional caption/text overlay and background music track.
 - Shareable settings via URL params.
