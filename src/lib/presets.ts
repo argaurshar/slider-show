@@ -5,10 +5,12 @@ import type { AspectRatioId, AspectRatioPreset, SliderConfig } from '../types/pr
  * a safe export resolution that every target platform accepts.
  */
 export const ASPECT_PRESETS: AspectRatioPreset[] = [
-  { id: '9:16', label: '9 : 16', platform: 'Reels / TikTok / Stories', width: 1080, height: 1920 },
-  { id: '1:1', label: '1 : 1', platform: 'Instagram feed (square)', width: 1080, height: 1080 },
-  { id: '4:5', label: '4 : 5', platform: 'Instagram portrait', width: 1080, height: 1350 },
+  // Primary formats — the two we target first.
+  { id: '9:16', label: '9 : 16', platform: 'Reel / Shorts / TikTok', width: 1080, height: 1920 },
   { id: '16:9', label: '16 : 9', platform: 'YouTube / landscape', width: 1920, height: 1080 },
+  // Additional sizes, available for other social placements.
+  { id: '1:1', label: '1 : 1', platform: 'Square feed', width: 1080, height: 1080 },
+  { id: '4:5', label: '4 : 5', platform: 'Portrait feed', width: 1080, height: 1350 },
   { id: '3:4', label: '3 : 4', platform: 'Classic portrait', width: 1080, height: 1440 },
   { id: '2:3', label: '2 : 3', platform: 'Pinterest / print', width: 1080, height: 1620 },
 ];
