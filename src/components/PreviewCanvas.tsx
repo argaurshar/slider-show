@@ -5,7 +5,7 @@ import { usePreviewAnimation } from '../hooks/usePreviewAnimation';
 import { cn } from '../lib/cn';
 
 export function PreviewCanvas() {
-  const { imageA, imageB, config } = useProjectStore();
+  const { imageA, imageB, transformA, transformB, config } = useProjectStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [playing, setPlaying] = useState(true);
   const [scrubT, setScrubT] = useState(0.5);
@@ -14,6 +14,8 @@ export function PreviewCanvas() {
     imageA,
     imageB,
     config,
+    transformA,
+    transformB,
     playing,
     scrubT,
     onProgress: (t) => setScrubT(t),

@@ -7,6 +7,8 @@ leave your device; rendering and video encoding happen client-side.
 ## Features
 
 - **Two-image input** — drag-and-drop or click to add a *before* and *after* image.
+- **Per-image framing** — zoom and reposition (focal point) each photo to choose
+  exactly what stays in frame, instead of a forced center-crop.
 - **Three transitions, your choice** — *reveal* (a divider line sweeps across to
   wipe image B over image A), *slide/push*, and *fade*.
 - **Every social format** — presets for 9:16, 1:1, 4:5, 16:9, 3:4, 2:3, all at a
@@ -85,6 +87,5 @@ tests/          coverRect, easing, sliderGeometry
 
 ## Roadmap
 
-- Focal-point crop adjustment per image.
 - Optional caption/text overlay and background music track.
 - Shareable settings via URL params.

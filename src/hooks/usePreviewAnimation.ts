@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { SliderConfig } from '../types/project';
+import type { ImageTransform, SliderConfig } from '../types/project';
+import { DEFAULT_TRANSFORM } from '../lib/presets';
 import type { LoadedImage } from '../lib/image/loadImage';
 import { renderFrame } from '../lib/render/renderFrame';
 import { scaleConfig } from '../lib/render/scaleConfig';
@@ -9,6 +10,8 @@ interface Options {
   imageA: LoadedImage | null;
   imageB: LoadedImage | null;
   config: SliderConfig;
+  transformA?: ImageTransform;
+  transformB?: ImageTransform;
   playing: boolean;
   /** Manual position 0..1 across the full timeline, used while paused. */
   scrubT: number;
@@ -22,10 +25,19 @@ interface Options {
  */
 export function usePreviewAnimation(
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  { imageA, imageB, config, playing, scrubT, onProgress }: Options,
+  {
+    imageA,
+    imageB,
+    config,
+    transformA = DEFAULT_TRANSFORM,
+    transformB = DEFAULT_TRANSFORM,
+    playing,
+    scrubT,
+    onProgress,
+  }: Options,
 ): void {
-  const stateRef = useRef({ playing, scrubT, config, imageA, imageB, onProgress });
-  stateRef.current = { playing, scrubT, config, imageA, imageB, onProgress };
+  const stateRef = useRef({ playing, scrubT, config, imageA, imageB, transformA, transformB, onProgress });
+  stateRef.current = { playing, scrubT, config, imageA, imageB, transformA, transformB, onProgress };
 
   // Keep the canvas backing store sized to the scaled preview config.
   const preview = scaleConfig(config);
@@ -64,7 +76,16 @@ export function usePreviewAnimation(
         frame = Math.round(s.scrubT * (timeline.totalFrames - 1));
       }
       const raw = frameProgress(frame, timeline);
-      renderFrame(ctx, s.imageA, s.imageB, raw, scaled, timelinePosition(frame, timeline));
+      renderFrame(
+        ctx,
+        s.imageA,
+        s.imageB,
+        raw,
+        scaled,
+        timelinePosition(frame, timeline),
+        s.transformA,
+        s.transformB,
+      );
     };
 
     const loop = (t: number) => {
@@ -96,6 +117,8 @@ export function usePreviewAnimation(
       frameProgress(frame, timeline),
       scaled,
       timelinePosition(frame, timeline),
+      transformA,
+      transformB,
     );
-  }, [canvasRef, playing, scrubT, config, imageA, imageB]);
+  }, [canvasRef, playing, scrubT, config, imageA, imageB, transformA, transformB]);
 }
