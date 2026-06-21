@@ -3,7 +3,7 @@ import type { AspectRatioId, ExportState, SliderConfig } from '../types/project'
 import { DEFAULT_CONFIG, getPreset, toEven } from '../lib/presets';
 import { disposeImage, type LoadedImage } from '../lib/image/loadImage';
 import { renderFrame } from '../lib/render/renderFrame';
-import { buildTimeline, frameProgress } from '../lib/render/sliderGeometry';
+import { buildTimeline, frameProgress, timelinePosition } from '../lib/render/sliderGeometry';
 import { pickExporter, downloadBlob, buildFileName } from '../lib/export/pickExporter';
 
 interface ProjectState {
@@ -111,7 +111,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       frameIndex: number,
     ) => {
       const raw = frameProgress(frameIndex, timeline);
-      renderFrame(ctx, imageA, imageB, raw, config);
+      renderFrame(ctx, imageA, imageB, raw, config, timelinePosition(frameIndex, timeline));
     };
 
     try {

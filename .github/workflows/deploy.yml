@@ -52,6 +52,9 @@ jobs:
 
   deploy:
     needs: build
+    # The github-pages environment only permits deploys from the default branch,
+    # so only publish from there. Other branches still run `build` as PR CI.
+    if: github.ref == 'refs/heads/claude/slider-video-generator-plan-u1vjmu'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

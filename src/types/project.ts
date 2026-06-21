@@ -11,7 +11,7 @@ export interface AspectRatioPreset {
   height: number;
 }
 
-export type TransitionId = 'reveal' | 'push' | 'fade';
+export type TransitionId = 'reveal' | 'push' | 'fade' | 'circle' | 'diagonal' | 'blinds';
 
 export type Direction = 'ltr' | 'rtl' | 'ttb' | 'btt';
 
@@ -36,6 +36,8 @@ export interface SliderConfig {
   holdStartMs: number;
   /** Frames held on image B after the transition ends. */
   holdEndMs: number;
+  /** Slow zoom/pan applied to both images across the whole clip for life. */
+  kenBurns: boolean;
   line: {
     color: string;
     /** Line thickness in pixels at output resolution. */

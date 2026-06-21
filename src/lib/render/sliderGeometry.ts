@@ -75,3 +75,79 @@ export function frameProgress(frame: number, timeline: Timeline): number {
   // Use motionFrames as the denominator so the final motion frame reaches 1.
   return motionFrame / motionFrames;
 }
+
+/** Position of a frame across the *entire* timeline (0..1), holds included. */
+export function timelinePosition(frame: number, timeline: Timeline): number {
+  const denom = timeline.totalFrames - 1;
+  return denom <= 0 ? 0 : Math.min(1, Math.max(0, frame / denom));
+}
+
+/** Radius that fully covers the canvas from its centre (circle transition). */
+export function circleMaxRadius(cw: number, ch: number): number {
+  return Math.hypot(cw, ch) / 2;
+}
+
+export interface Band {
+  /** Offset of the band's revealed strip along the axis. */
+  start: number;
+  /** Length of the revealed strip (grows 0..bandSize with progress). */
+  size: number;
+}
+
+/**
+ * Venetian-blind bands. The axis (cw or ch) is split into `count` equal bands;
+ * each reveals a strip of length `bandSize * eased`. `forward` controls which
+ * edge of each band the strip grows from.
+ */
+export function blindBands(
+  eased: number,
+  count: number,
+  length: number,
+  forward: boolean,
+): Band[] {
+  const bandSize = length / count;
+  const reveal = Math.max(0, Math.min(1, eased)) * bandSize;
+  const bands: Band[] = [];
+  for (let i = 0; i < count; i++) {
+    const base = i * bandSize;
+    bands.push({ start: forward ? base : base + bandSize - reveal, size: reveal });
+  }
+  return bands;
+}
+
+type Pt = [number, number];
+
+/**
+ * Clip the canvas rectangle to the half-plane `a*x + b*y <= c`, returning the
+ * polygon (clockwise) of the region that satisfies it. Used for the diagonal
+ * wipe. Implemented with a single-edge Sutherland–Hodgman clip.
+ */
+export function halfPlanePolygon(cw: number, ch: number, a: number, b: number, c: number): Pt[] {
+  const rect: Pt[] = [
+    [0, 0],
+    [cw, 0],
+    [cw, ch],
+    [0, ch],
+  ];
+  const inside = (p: Pt) => a * p[0] + b * p[1] <= c;
+  const intersect = (p: Pt, q: Pt): Pt => {
+    const dp = a * p[0] + b * p[1] - c;
+    const dq = a * q[0] + b * q[1] - c;
+    const t = dp / (dp - dq);
+    return [p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])];
+  };
+  const out: Pt[] = [];
+  for (let i = 0; i < rect.length; i++) {
+    const cur = rect[i];
+    const prev = rect[(i + rect.length - 1) % rect.length];
+    const curIn = inside(cur);
+    const prevIn = inside(prev);
+    if (curIn) {
+      if (!prevIn) out.push(intersect(prev, cur));
+      out.push(cur);
+    } else if (prevIn) {
+      out.push(intersect(prev, cur));
+    }
+  }
+  return out;
+}

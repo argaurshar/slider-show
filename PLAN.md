@@ -194,9 +194,9 @@ two images + progress(0..1) + SliderConfig ──► renderFrame() ──► one
 - Swap A/B, paste support.
 
 **Phase 2 — Beauty & reach**
-- Caption/title overlay (safe-area aware) in `renderFrame`.
-- ffmpeg.wasm fallback → MP4 everywhere (Safari/Firefox).
-- More transitions (circle/diagonal/blinds wipes, Ken-Burns).
+- ✅ More transitions (circle / diagonal / blinds wipes) + Ken-Burns zoom drift.
+- ffmpeg.wasm fallback → MP4 everywhere (Safari/Firefox). *(next)*
+- Caption/title overlay — deferred per product decision (later phase).
 
 **Phase 3 — Audio & sharing**
 - Background music + audio muxing.

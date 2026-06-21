@@ -37,6 +37,7 @@ export const DEFAULT_CONFIG: SliderConfig = {
   loop: 'none',
   holdStartMs: 600,
   holdEndMs: 800,
+  kenBurns: false,
   line: {
     color: '#ffffff',
     width: 6,

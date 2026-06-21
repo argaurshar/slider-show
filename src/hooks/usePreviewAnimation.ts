@@ -3,7 +3,7 @@ import type { SliderConfig } from '../types/project';
 import type { LoadedImage } from '../lib/image/loadImage';
 import { renderFrame } from '../lib/render/renderFrame';
 import { scaleConfig } from '../lib/render/scaleConfig';
-import { buildTimeline, frameProgress } from '../lib/render/sliderGeometry';
+import { buildTimeline, frameProgress, timelinePosition } from '../lib/render/sliderGeometry';
 
 interface Options {
   imageA: LoadedImage | null;
@@ -64,7 +64,7 @@ export function usePreviewAnimation(
         frame = Math.round(s.scrubT * (timeline.totalFrames - 1));
       }
       const raw = frameProgress(frame, timeline);
-      renderFrame(ctx, s.imageA, s.imageB, raw, scaled);
+      renderFrame(ctx, s.imageA, s.imageB, raw, scaled, timelinePosition(frame, timeline));
     };
 
     const loop = (t: number) => {
@@ -89,6 +89,13 @@ export function usePreviewAnimation(
     const scaled = scaleConfig(config);
     const timeline = buildTimeline(scaled.durationMs, scaled.fps, scaled.holdStartMs, scaled.holdEndMs);
     const frame = Math.round(scrubT * (timeline.totalFrames - 1));
-    renderFrame(ctx, imageA, imageB, frameProgress(frame, timeline), scaled);
+    renderFrame(
+      ctx,
+      imageA,
+      imageB,
+      frameProgress(frame, timeline),
+      scaled,
+      timelinePosition(frame, timeline),
+    );
   }, [canvasRef, playing, scrubT, config, imageA, imageB]);
 }
