@@ -32,4 +32,28 @@ describe('coverRect', () => {
     const r = coverRect(0, 0, 800, 600);
     expect(r).toEqual({ dx: 0, dy: 0, dw: 800, dh: 600, scale: 1 });
   });
+
+  it('magnifies by the zoom factor while still covering the canvas', () => {
+    const base = coverRect(1000, 1000, 1000, 1000);
+    const zoomed = coverRect(1000, 1000, 1000, 1000, 0.5, 0.5, 2);
+    expect(zoomed.scale).toBeCloseTo(base.scale * 2, 5);
+    expect(zoomed.dw).toBeCloseTo(2000, 5);
+    expect(zoomed.dh).toBeCloseTo(2000, 5);
+    // Centered: overflow split evenly, image still covers (dx,dy <= 0).
+    expect(zoomed.dx).toBeCloseTo(-500, 5);
+    expect(zoomed.dy).toBeCloseTo(-500, 5);
+  });
+
+  it('treats zoom < 1 as no zoom (never exposes the backdrop)', () => {
+    const r = coverRect(1000, 1000, 1000, 1000, 0.5, 0.5, 0.3);
+    expect(r.scale).toBeCloseTo(1, 5);
+    expect(r.dw).toBeCloseTo(1000, 5);
+  });
+
+  it('pans within the zoomed overflow via the focal point', () => {
+    const left = coverRect(1000, 1000, 1000, 1000, 0, 0.5, 2);
+    const right = coverRect(1000, 1000, 1000, 1000, 1, 0.5, 2);
+    expect(left.dx).toBeCloseTo(0, 5); // focusX 0 -> left edge flush
+    expect(right.dx).toBeCloseTo(-1000, 5); // focusX 1 -> right edge flush
+  });
 });

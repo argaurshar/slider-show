@@ -17,7 +17,7 @@ import { EASING_LABELS } from '../lib/render/easing';
 import { ColorControl, Field, Segmented, SliderControl, Toggle } from './ui/Controls';
 import { ImageUploader } from './ImageUploader';
 import { cn } from '../lib/cn';
-import type { Direction, EasingId, LoopMode, TransitionId } from '../types/project';
+import type { Direction, EasingId, ImageTransform, LoopMode, TransitionId } from '../types/project';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -30,14 +30,75 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+/** Per-image zoom + focal-point (pan) controls. */
+function FramingGroup({
+  label,
+  transform,
+  onChange,
+  onReset,
+}: {
+  label: string;
+  transform: ImageTransform;
+  onChange: (patch: Partial<ImageTransform>) => void;
+  onReset: () => void;
+}) {
+  const moved = transform.zoom !== 1 || transform.focusX !== 0.5 || transform.focusY !== 0.5;
+  return (
+    <div className="space-y-3 rounded-xl bg-ink-800/60 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-white/70">{label}</span>
+        <button
+          type="button"
+          onClick={onReset}
+          disabled={!moved}
+          className="text-[11px] text-white/45 transition hover:text-white disabled:opacity-30"
+        >
+          Reset
+        </button>
+      </div>
+      <SliderControl
+        label="Zoom"
+        value={Number(transform.zoom.toFixed(2))}
+        min={1}
+        max={3}
+        step={0.05}
+        suffix="×"
+        onChange={(zoom) => onChange({ zoom })}
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <SliderControl
+          label="Horizontal"
+          value={Math.round(transform.focusX * 100)}
+          min={0}
+          max={100}
+          suffix="%"
+          onChange={(v) => onChange({ focusX: v / 100 })}
+        />
+        <SliderControl
+          label="Vertical"
+          value={Math.round(transform.focusY * 100)}
+          min={0}
+          max={100}
+          suffix="%"
+          onChange={(v) => onChange({ focusY: v / 100 })}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ControlsPanel() {
   const {
     imageA,
     imageB,
+    transformA,
+    transformB,
     config,
     setImage,
     clearImage,
     swapImages,
+    updateTransform,
+    resetTransform,
     updateConfig,
     setAspectRatio,
   } = useProjectStore();
@@ -83,6 +144,30 @@ export function ControlsPanel() {
           <ArrowLeftRight size={14} /> Swap before / after
         </button>
       </Section>
+
+      {(imageA || imageB) && (
+        <Section title="Framing">
+          <p className="-mt-1 text-[11px] leading-snug text-white/40">
+            Zoom and reposition each photo to choose what stays in frame.
+          </p>
+          {imageA && (
+            <FramingGroup
+              label="Before"
+              transform={transformA}
+              onChange={(patch) => updateTransform('A', patch)}
+              onReset={() => resetTransform('A')}
+            />
+          )}
+          {imageB && (
+            <FramingGroup
+              label="After"
+              transform={transformB}
+              onChange={(patch) => updateTransform('B', patch)}
+              onReset={() => resetTransform('B')}
+            />
+          )}
+        </Section>
+      )}
 
       <Section title="Format">
         <div className="grid grid-cols-3 gap-2">

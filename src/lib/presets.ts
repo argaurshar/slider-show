@@ -1,4 +1,7 @@
-import type { AspectRatioId, AspectRatioPreset, SliderConfig } from '../types/project';
+import type { AspectRatioId, AspectRatioPreset, ImageTransform, SliderConfig } from '../types/project';
+
+/** Default framing: no extra zoom, centred. */
+export const DEFAULT_TRANSFORM: ImageTransform = { zoom: 1, focusX: 0.5, focusY: 0.5 };
 
 /**
  * Social-media format presets. Dimensions are chosen at a 1080px short edge,

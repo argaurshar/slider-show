@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { AspectRatioId, ExportState, SliderConfig } from '../types/project';
-import { DEFAULT_CONFIG, getPreset, toEven } from '../lib/presets';
+import type { AspectRatioId, ExportState, ImageTransform, SliderConfig } from '../types/project';
+import { DEFAULT_CONFIG, DEFAULT_TRANSFORM, getPreset, toEven } from '../lib/presets';
 import { disposeImage, type LoadedImage } from '../lib/image/loadImage';
 import { renderFrame } from '../lib/render/renderFrame';
 import { buildTimeline, frameProgress, timelinePosition } from '../lib/render/sliderGeometry';
@@ -9,6 +9,8 @@ import { pickExporter, downloadBlob, buildFileName } from '../lib/export/pickExp
 interface ProjectState {
   imageA: LoadedImage | null;
   imageB: LoadedImage | null;
+  transformA: ImageTransform;
+  transformB: ImageTransform;
   config: SliderConfig;
   export: ExportState;
   abortController: AbortController | null;
@@ -16,6 +18,8 @@ interface ProjectState {
   setImage: (slot: 'A' | 'B', image: LoadedImage) => void;
   clearImage: (slot: 'A' | 'B') => void;
   swapImages: () => void;
+  updateTransform: (slot: 'A' | 'B', patch: Partial<ImageTransform>) => void;
+  resetTransform: (slot: 'A' | 'B') => void;
   updateConfig: (patch: Partial<SliderConfig>) => void;
   setAspectRatio: (id: AspectRatioId, custom?: { width: number; height: number }) => void;
   startExport: () => Promise<void>;
@@ -28,25 +32,57 @@ const idleExport: ExportState = { status: 'idle', progress: 0 };
 export const useProjectStore = create<ProjectState>((set, get) => ({
   imageA: null,
   imageB: null,
+  transformA: { ...DEFAULT_TRANSFORM },
+  transformB: { ...DEFAULT_TRANSFORM },
   config: DEFAULT_CONFIG,
   export: idleExport,
   abortController: null,
 
   setImage: (slot, image) => {
     const key = slot === 'A' ? 'imageA' : 'imageB';
+    const tKey = slot === 'A' ? 'transformA' : 'transformB';
     const previous = get()[key];
     if (previous) disposeImage(previous);
-    set({ [key]: image } as Pick<ProjectState, 'imageA' | 'imageB'>);
+    // Reset framing for the new image.
+    set({ [key]: image, [tKey]: { ...DEFAULT_TRANSFORM } } as Pick<
+      ProjectState,
+      'imageA' | 'imageB' | 'transformA' | 'transformB'
+    >);
   },
 
   clearImage: (slot) => {
     const key = slot === 'A' ? 'imageA' : 'imageB';
+    const tKey = slot === 'A' ? 'transformA' : 'transformB';
     const previous = get()[key];
     if (previous) disposeImage(previous);
-    set({ [key]: null } as Pick<ProjectState, 'imageA' | 'imageB'>);
+    set({ [key]: null, [tKey]: { ...DEFAULT_TRANSFORM } } as Pick<
+      ProjectState,
+      'imageA' | 'imageB' | 'transformA' | 'transformB'
+    >);
   },
 
-  swapImages: () => set((s) => ({ imageA: s.imageB, imageB: s.imageA })),
+  swapImages: () =>
+    set((s) => ({
+      imageA: s.imageB,
+      imageB: s.imageA,
+      transformA: s.transformB,
+      transformB: s.transformA,
+    })),
+
+  updateTransform: (slot, patch) =>
+    set((s) => {
+      const tKey = slot === 'A' ? 'transformA' : 'transformB';
+      return { [tKey]: { ...s[tKey], ...patch } } as Pick<ProjectState, 'transformA' | 'transformB'>;
+    }),
+
+  resetTransform: (slot) =>
+    set(
+      () =>
+        ({ [slot === 'A' ? 'transformA' : 'transformB']: { ...DEFAULT_TRANSFORM } }) as Pick<
+          ProjectState,
+          'transformA' | 'transformB'
+        >,
+    ),
 
   updateConfig: (patch) => set((s) => ({ config: { ...s.config, ...patch } })),
 
@@ -76,7 +112,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   startExport: async () => {
-    const { imageA, imageB, config } = get();
+    const { imageA, imageB, config, transformA, transformB } = get();
     if (!imageA || !imageB) {
       set({ export: { status: 'error', progress: 0, error: 'Add both images first.' } });
       return;
@@ -111,7 +147,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       frameIndex: number,
     ) => {
       const raw = frameProgress(frameIndex, timeline);
-      renderFrame(ctx, imageA, imageB, raw, config, timelinePosition(frameIndex, timeline));
+      renderFrame(
+        ctx,
+        imageA,
+        imageB,
+        raw,
+        config,
+        timelinePosition(frameIndex, timeline),
+        transformA,
+        transformB,
+      );
     };
 
     try {

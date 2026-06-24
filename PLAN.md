@@ -200,9 +200,9 @@ two images + progress(0..1) + SliderConfig ──► renderFrame() ──► one
 - Caption/title overlay — deferred per product decision (later phase).
 
 **Phase 3 — Audio & sharing**
+- ✅ Per-image framing: zoom + focal-point (pan) crop per image.
 - Background music + audio muxing.
 - Shareable URL settings + localStorage.
-- Focal-point crop per image.
 
 Each phase ends with: typecheck green, tests green, manual verify in-app,
 commit + PR.

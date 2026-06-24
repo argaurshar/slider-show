@@ -56,6 +56,16 @@ export interface SliderConfig {
 
 export type ExportStatus = 'idle' | 'preparing' | 'rendering' | 'encoding' | 'done' | 'error';
 
+/** Per-image framing: extra zoom and focal point within the output frame. */
+export interface ImageTransform {
+  /** Magnification on top of cover-fit (1 = none). */
+  zoom: number;
+  /** Horizontal focal point 0..1 (0.5 = centred). */
+  focusX: number;
+  /** Vertical focal point 0..1. */
+  focusY: number;
+}
+
 export interface ExportState {
   status: ExportStatus;
   /** 0..1 progress for the current phase. */

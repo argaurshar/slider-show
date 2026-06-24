@@ -1,5 +1,6 @@
-import type { SliderConfig } from '../../types/project';
+import type { ImageTransform, SliderConfig } from '../../types/project';
 import { coverRect } from '../image/coverRect';
+import { DEFAULT_TRANSFORM } from '../presets';
 import { applyEasing } from './easing';
 import {
   axisOf,
@@ -37,38 +38,23 @@ function kenBurnsMotion(config: SliderConfig, cw: number, ch: number, timelineT:
   return { scale, panX: -cw * 0.04 * t, panY: -ch * 0.02 * t };
 }
 
+/**
+ * Draw an image with cover-fit plus its per-image framing (zoom + focal point),
+ * an optional push offset (slide transition) and Ken-Burns motion. The image
+ * always covers the canvas, so panning never exposes the backdrop.
+ */
 function drawCover(
   ctx: Ctx,
   img: RenderImage,
   cw: number,
   ch: number,
-  offsetX = 0,
+  t: ImageTransform,
   m: Motion = NO_MOTION,
+  pushX = 0,
+  pushY = 0,
 ): void {
-  const r = coverRect(img.width, img.height, cw, ch);
-  const dw = r.dw * m.scale;
-  const dh = r.dh * m.scale;
-  // Scale about the canvas centre so the cover crop stays centred, then apply
-  // the push offset and Ken-Burns pan.
-  const dx = cw / 2 - dw / 2 + offsetX + m.panX;
-  const dy = ch / 2 - dh / 2 + m.panY;
-  ctx.drawImage(img.source, dx, dy, dw, dh);
-}
-
-function drawCoverY(
-  ctx: Ctx,
-  img: RenderImage,
-  cw: number,
-  ch: number,
-  offsetY: number,
-  m: Motion = NO_MOTION,
-): void {
-  const r = coverRect(img.width, img.height, cw, ch);
-  const dw = r.dw * m.scale;
-  const dh = r.dh * m.scale;
-  const dx = cw / 2 - dw / 2 + m.panX;
-  const dy = ch / 2 - dh / 2 + offsetY + m.panY;
-  ctx.drawImage(img.source, dx, dy, dw, dh);
+  const r = coverRect(img.width, img.height, cw, ch, t.focusX, t.focusY, t.zoom * m.scale);
+  ctx.drawImage(img.source, r.dx + pushX + m.panX, r.dy + pushY + m.panY, r.dw, r.dh);
 }
 
 /**
@@ -80,6 +66,7 @@ function drawCoverY(
  * @param rawProgress motion progress in [0,1] BEFORE loop/easing are applied.
  * @param timelineT   position across the whole timeline (holds included), used
  *                    for Ken-Burns drift. Defaults to the motion progress.
+ * @param tA,tB       per-image framing (zoom + focal point) for A and B.
  */
 export function renderFrame(
   ctx: Ctx,
@@ -88,6 +75,8 @@ export function renderFrame(
   rawProgress: number,
   config: SliderConfig,
   timelineT: number = rawProgress,
+  tA: ImageTransform = DEFAULT_TRANSFORM,
+  tB: ImageTransform = DEFAULT_TRANSFORM,
 ): void {
   const { width: cw, height: ch } = config;
 
@@ -101,23 +90,23 @@ export function renderFrame(
 
   switch (config.transition) {
     case 'fade':
-      renderFade(ctx, imageA, imageB, eased, cw, ch, motion);
+      renderFade(ctx, imageA, imageB, eased, cw, ch, motion, tA, tB);
       break;
     case 'push':
-      renderPush(ctx, imageA, imageB, eased, config, cw, ch, motion);
+      renderPush(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
     case 'circle':
-      renderCircle(ctx, imageA, imageB, eased, config, cw, ch, motion);
+      renderCircle(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
     case 'diagonal':
-      renderDiagonal(ctx, imageA, imageB, eased, config, cw, ch, motion);
+      renderDiagonal(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
     case 'blinds':
-      renderBlinds(ctx, imageA, imageB, eased, config, cw, ch, motion);
+      renderBlinds(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
     case 'reveal':
     default:
-      renderReveal(ctx, imageA, imageB, eased, config, cw, ch, motion);
+      renderReveal(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
   }
 }
@@ -130,12 +119,14 @@ function renderFade(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
-  if (imageA) drawCover(ctx, imageA, cw, ch, 0, m);
+  if (imageA) drawCover(ctx, imageA, cw, ch, tA, m);
   if (imageB) {
     ctx.save();
     ctx.globalAlpha = eased;
-    drawCover(ctx, imageB, cw, ch, 0, m);
+    drawCover(ctx, imageB, cw, ch, tB, m);
     ctx.restore();
   }
 }
@@ -149,13 +140,15 @@ function renderReveal(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
   const axis = axisOf(config.direction);
   const frac = splitFraction(config.direction, eased);
   const split = axis === 'x' ? frac * cw : frac * ch;
 
   // Base layer: image A fills the whole frame.
-  if (imageA) drawCover(ctx, imageA, cw, ch, 0, m);
+  if (imageA) drawCover(ctx, imageA, cw, ch, tA, m);
 
   // Reveal layer: image B is clipped to the region the slider has swept past.
   if (imageB) {
@@ -166,7 +159,7 @@ function renderReveal(
     else if (config.direction === 'ttb') ctx.rect(0, 0, cw, split);
     else ctx.rect(0, split, cw, ch - split);
     ctx.clip();
-    drawCover(ctx, imageB, cw, ch, 0, m);
+    drawCover(ctx, imageB, cw, ch, tB, m);
     ctx.restore();
   }
 
@@ -182,24 +175,24 @@ function renderPush(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
   const axis = axisOf(config.direction);
   // Travel direction sign: A exits one way, B enters from the opposite edge.
   const forward = config.direction === 'ltr' || config.direction === 'ttb';
   const dist = axis === 'x' ? cw : ch;
   const offset = eased * dist;
+  const aShift = forward ? -offset : offset;
+  const bShift = forward ? dist - offset : offset - dist;
 
   ctx.save();
   if (axis === 'x') {
-    const aShift = forward ? -offset : offset;
-    const bShift = forward ? dist - offset : offset - dist;
-    if (imageA) drawCover(ctx, imageA, cw, ch, aShift, m);
-    if (imageB) drawCover(ctx, imageB, cw, ch, bShift, m);
+    if (imageA) drawCover(ctx, imageA, cw, ch, tA, m, aShift, 0);
+    if (imageB) drawCover(ctx, imageB, cw, ch, tB, m, bShift, 0);
   } else {
-    const aShift = forward ? -offset : offset;
-    const bShift = forward ? dist - offset : offset - dist;
-    if (imageA) drawCoverY(ctx, imageA, cw, ch, aShift, m);
-    if (imageB) drawCoverY(ctx, imageB, cw, ch, bShift, m);
+    if (imageA) drawCover(ctx, imageA, cw, ch, tA, m, 0, aShift);
+    if (imageB) drawCover(ctx, imageB, cw, ch, tB, m, 0, bShift);
   }
   ctx.restore();
 }
@@ -213,8 +206,10 @@ function renderCircle(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
-  if (imageA) drawCover(ctx, imageA, cw, ch, 0, m);
+  if (imageA) drawCover(ctx, imageA, cw, ch, tA, m);
 
   const radius = eased * circleMaxRadius(cw, ch);
   if (imageB && radius > 0) {
@@ -222,7 +217,7 @@ function renderCircle(
     ctx.beginPath();
     ctx.arc(cw / 2, ch / 2, radius, 0, Math.PI * 2);
     ctx.clip();
-    drawCover(ctx, imageB, cw, ch, 0, m);
+    drawCover(ctx, imageB, cw, ch, tB, m);
     ctx.restore();
   }
 
@@ -250,8 +245,10 @@ function renderDiagonal(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
-  if (imageA) drawCover(ctx, imageA, cw, ch, 0, m);
+  if (imageA) drawCover(ctx, imageA, cw, ch, tA, m);
 
   const forward = config.direction === 'ltr' || config.direction === 'ttb';
   // Boundary line x + y = k sweeps from the top-left corner (forward) or the
@@ -270,7 +267,7 @@ function renderDiagonal(
       for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i][0], poly[i][1]);
       ctx.closePath();
       ctx.clip();
-      drawCover(ctx, imageB, cw, ch, 0, m);
+      drawCover(ctx, imageB, cw, ch, tB, m);
       ctx.restore();
     }
   }
@@ -314,8 +311,10 @@ function renderBlinds(
   cw: number,
   ch: number,
   m: Motion,
+  tA: ImageTransform,
+  tB: ImageTransform,
 ): void {
-  if (imageA) drawCover(ctx, imageA, cw, ch, 0, m);
+  if (imageA) drawCover(ctx, imageA, cw, ch, tA, m);
 
   const axis = axisOf(config.direction);
   const forward = config.direction === 'ltr' || config.direction === 'ttb';
@@ -330,7 +329,7 @@ function renderBlinds(
       else ctx.rect(0, band.start, cw, band.size);
     }
     ctx.clip();
-    drawCover(ctx, imageB, cw, ch, 0, m);
+    drawCover(ctx, imageB, cw, ch, tB, m);
     ctx.restore();
   }
 }
