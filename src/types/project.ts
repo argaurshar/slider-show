@@ -21,6 +21,20 @@ export type LoopMode = 'none' | 'loop' | 'pingpong';
 
 export type HandleIcon = 'arrows' | 'dot' | 'none';
 
+export type CaptionPosition = 'top' | 'center' | 'bottom';
+
+/** Optional text overlay drawn on top of every frame. */
+export interface CaptionConfig {
+  /** Overlay text; empty/blank means no caption is drawn. Newlines split lines. */
+  text: string;
+  position: CaptionPosition;
+  /** Font size as a fraction of canvas height (resolution-independent). */
+  sizePct: number;
+  color: string;
+  /** Draw a translucent backing bar behind the text for legibility. */
+  background: boolean;
+}
+
 export interface SliderConfig {
   aspectRatio: AspectRatioId;
   /** Resolved output canvas size in pixels (always even). */
@@ -52,6 +66,8 @@ export interface SliderConfig {
   };
   /** Solid fill drawn behind images (only visible if an image cannot fully cover). */
   background: string;
+  /** Optional text overlay. */
+  caption: CaptionConfig;
 }
 
 export type ExportStatus = 'idle' | 'preparing' | 'rendering' | 'encoding' | 'done' | 'error';

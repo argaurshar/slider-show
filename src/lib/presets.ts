@@ -53,4 +53,11 @@ export const DEFAULT_CONFIG: SliderConfig = {
     iconColor: '#6c5cff',
   },
   background: '#000000',
+  caption: {
+    text: '',
+    position: 'bottom',
+    sizePct: 0.06,
+    color: '#ffffff',
+    background: true,
+  },
 };

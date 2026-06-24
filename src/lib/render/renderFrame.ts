@@ -1,6 +1,7 @@
 import type { ImageTransform, SliderConfig } from '../../types/project';
 import { coverRect } from '../image/coverRect';
 import { DEFAULT_TRANSFORM } from '../presets';
+import { drawCaption } from './caption';
 import { applyEasing } from './easing';
 import {
   axisOf,
@@ -109,6 +110,9 @@ export function renderFrame(
       renderReveal(ctx, imageA, imageB, eased, config, cw, ch, motion, tA, tB);
       break;
   }
+
+  // Text overlay sits above the images and the slider divider.
+  drawCaption(ctx, config.caption, cw, ch);
 }
 
 function renderFade(

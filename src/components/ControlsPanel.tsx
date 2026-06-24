@@ -17,7 +17,15 @@ import { EASING_LABELS } from '../lib/render/easing';
 import { ColorControl, Field, Segmented, SliderControl, Toggle } from './ui/Controls';
 import { ImageUploader } from './ImageUploader';
 import { cn } from '../lib/cn';
-import type { Direction, EasingId, ImageTransform, LoopMode, TransitionId } from '../types/project';
+import type {
+  CaptionConfig,
+  CaptionPosition,
+  Direction,
+  EasingId,
+  ImageTransform,
+  LoopMode,
+  TransitionId,
+} from '../types/project';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -84,6 +92,59 @@ function FramingGroup({
         />
       </div>
     </div>
+  );
+}
+
+const CAPTION_POSITIONS: { value: CaptionPosition; label: string }[] = [
+  { value: 'top', label: 'Top' },
+  { value: 'center', label: 'Center' },
+  { value: 'bottom', label: 'Bottom' },
+];
+
+/** Optional text-overlay controls. */
+function CaptionSection({
+  caption,
+  onChange,
+}: {
+  caption: CaptionConfig;
+  onChange: (patch: Partial<CaptionConfig>) => void;
+}) {
+  return (
+    <Section title="Caption">
+      <Field label="Text" hint="optional">
+        <textarea
+          rows={2}
+          value={caption.text}
+          onChange={(e) => onChange({ text: e.target.value })}
+          placeholder="Add a caption (e.g. Before → After)"
+          className="w-full resize-none rounded-lg border border-white/10 bg-ink-800 px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-brand-400 focus:outline-none"
+        />
+      </Field>
+      {caption.text.trim() !== '' && (
+        <>
+          <Segmented
+            label="Position"
+            value={caption.position}
+            options={CAPTION_POSITIONS}
+            onChange={(position) => onChange({ position })}
+          />
+          <SliderControl
+            label="Size"
+            value={Math.round(caption.sizePct * 100)}
+            min={3}
+            max={15}
+            suffix="%"
+            onChange={(v) => onChange({ sizePct: v / 100 })}
+          />
+          <ColorControl label="Color" value={caption.color} onChange={(color) => onChange({ color })} />
+          <Toggle
+            label="Backing bar"
+            checked={caption.background}
+            onChange={(background) => onChange({ background })}
+          />
+        </>
+      )}
+    </Section>
   );
 }
 
@@ -168,6 +229,11 @@ export function ControlsPanel() {
           )}
         </Section>
       )}
+
+      <CaptionSection
+        caption={config.caption}
+        onChange={(patch) => updateConfig({ caption: { ...config.caption, ...patch } })}
+      />
 
       <Section title="Format">
         <div className="grid grid-cols-3 gap-2">
