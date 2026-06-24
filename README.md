@@ -7,8 +7,9 @@ leave your device; rendering and video encoding happen client-side.
 ## Features
 
 - **Two-image input** — drag-and-drop or click to add a *before* and *after* image.
-- **Per-image framing** — zoom and reposition (focal point) each photo to choose
-  exactly what stays in frame, instead of a forced center-crop.
+- **Per-image framing** — choose **Fill** (crop to fill) or **Fit whole**
+  (letterbox the entire image) per photo, plus zoom and reposition (focal point)
+  to control exactly what stays in frame.
 - **Caption overlay** — optional text on the video, with top/center/bottom
   position, size, color, and a translucent backing bar; auto-shrinks to fit.
 - **Shareable settings** — every setting is encoded in the URL and saved to

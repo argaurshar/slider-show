@@ -56,4 +56,35 @@ describe('coverRect', () => {
     expect(left.dx).toBeCloseTo(0, 5); // focusX 0 -> left edge flush
     expect(right.dx).toBeCloseTo(-1000, 5); // focusX 1 -> right edge flush
   });
+
+  it('contain mode fits the whole image with letterbox padding', () => {
+    // Landscape into square: fits width, pads top/bottom.
+    const r = coverRect(2000, 1000, 1000, 1000, 0.5, 0.5, 1, 'contain');
+    expect(r.scale).toBeCloseTo(0.5, 5); // limited by width: 1000/2000
+    expect(r.dw).toBeCloseTo(1000, 5);
+    expect(r.dh).toBeCloseTo(500, 5); // shorter than the canvas -> letterbox
+    expect(r.dx).toBeCloseTo(0, 5);
+    expect(r.dy).toBeCloseTo(250, 5); // centred vertically
+  });
+
+  it('contain mode fits a portrait inside a square (pillarbox)', () => {
+    const r = coverRect(1000, 2000, 1000, 1000, 0.5, 0.5, 1, 'contain');
+    expect(r.dw).toBeCloseTo(500, 5); // narrower -> pillarbox
+    expect(r.dh).toBeCloseTo(1000, 5);
+    expect(r.dx).toBeCloseTo(250, 5);
+  });
+
+  it('contain mode honors the focal point within the padding', () => {
+    const left = coverRect(2000, 1000, 1000, 1000, 0.5, 0, 1, 'contain');
+    const top = coverRect(2000, 1000, 1000, 1000, 0.5, 0, 1, 'contain');
+    expect(left.dy).toBeCloseTo(0, 5); // focusY 0 -> flush to top of padding
+    expect(top.dy).toBeCloseTo(0, 5);
+  });
+
+  it('contain mode with zoom can overflow and crop like cover', () => {
+    const r = coverRect(2000, 1000, 1000, 1000, 0.5, 0.5, 3, 'contain');
+    expect(r.scale).toBeCloseTo(1.5, 5); // 0.5 * 3
+    expect(r.dw).toBeCloseTo(3000, 5); // now larger than the canvas
+    expect(r.dx).toBeCloseTo(-1000, 5);
+  });
 });
