@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import type { AspectRatioId, ExportState, ImageTransform, SliderConfig } from '../types/project';
-import { DEFAULT_CONFIG, DEFAULT_TRANSFORM, getPreset, toEven } from '../lib/presets';
+import { DEFAULT_TRANSFORM, getPreset, toEven } from '../lib/presets';
 import { disposeImage, type LoadedImage } from '../lib/image/loadImage';
 import { renderFrame } from '../lib/render/renderFrame';
 import { buildTimeline, frameProgress, timelinePosition } from '../lib/render/sliderGeometry';
 import { pickExporter, downloadBlob, buildFileName } from '../lib/export/pickExporter';
+import { loadInitialConfig, persistConfig } from '../lib/settings/shareConfig';
 
 interface ProjectState {
   imageA: LoadedImage | null;
@@ -34,7 +35,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   imageB: null,
   transformA: { ...DEFAULT_TRANSFORM },
   transformB: { ...DEFAULT_TRANSFORM },
-  config: DEFAULT_CONFIG,
+  config: loadInitialConfig(),
   export: idleExport,
   abortController: null,
 
@@ -84,7 +85,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         >,
     ),
 
-  updateConfig: (patch) => set((s) => ({ config: { ...s.config, ...patch } })),
+  updateConfig: (patch) => {
+    set((s) => ({ config: { ...s.config, ...patch } }));
+    persistConfig(get().config);
+  },
 
   setAspectRatio: (id, custom) => {
     set((s) => {
@@ -109,6 +113,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         },
       };
     });
+    persistConfig(get().config);
   },
 
   startExport: async () => {

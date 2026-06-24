@@ -202,8 +202,8 @@ two images + progress(0..1) + SliderConfig ──► renderFrame() ──► one
 **Phase 3 — Audio & sharing**
 - ✅ Per-image framing: zoom + focal-point (pan) crop per image.
 - ✅ Caption / text overlay (position, size, color, backing bar).
+- ✅ Shareable URL settings + localStorage persistence.
 - Background music + audio muxing.
-- Shareable URL settings + localStorage.
 
 Each phase ends with: typecheck green, tests green, manual verify in-app,
 commit + PR.
