@@ -72,9 +72,14 @@ export interface SliderConfig {
 
 export type ExportStatus = 'idle' | 'preparing' | 'rendering' | 'encoding' | 'done' | 'error';
 
-/** Per-image framing: extra zoom and focal point within the output frame. */
+/** How an image is sized into the frame: crop-to-fill, or fit-whole (letterbox). */
+export type FitMode = 'cover' | 'contain';
+
+/** Per-image framing: fit mode, extra zoom and focal point within the frame. */
 export interface ImageTransform {
-  /** Magnification on top of cover-fit (1 = none). */
+  /** 'cover' crops to fill the frame; 'contain' fits the whole image (padded). */
+  fit: FitMode;
+  /** Magnification on top of the fit (1 = none). */
   zoom: number;
   /** Horizontal focal point 0..1 (0.5 = centred). */
   focusX: number;

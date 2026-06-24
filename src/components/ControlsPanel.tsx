@@ -55,7 +55,11 @@ function FramingGroup({
   onChange: (patch: Partial<ImageTransform>) => void;
   onReset: () => void;
 }) {
-  const moved = transform.zoom !== 1 || transform.focusX !== 0.5 || transform.focusY !== 0.5;
+  const moved =
+    transform.fit !== 'cover' ||
+    transform.zoom !== 1 ||
+    transform.focusX !== 0.5 ||
+    transform.focusY !== 0.5;
   return (
     <div className="space-y-3 rounded-xl bg-ink-800/60 p-3">
       <div className="flex items-center justify-between">
@@ -69,6 +73,14 @@ function FramingGroup({
           Reset
         </button>
       </div>
+      <Segmented
+        value={transform.fit}
+        options={[
+          { value: 'cover', label: 'Fill' },
+          { value: 'contain', label: 'Fit whole' },
+        ]}
+        onChange={(fit) => onChange({ fit })}
+      />
       <SliderControl
         label="Zoom"
         value={Number(transform.zoom.toFixed(2))}

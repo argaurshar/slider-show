@@ -54,7 +54,7 @@ function drawCover(
   pushX = 0,
   pushY = 0,
 ): void {
-  const r = coverRect(img.width, img.height, cw, ch, t.focusX, t.focusY, t.zoom * m.scale);
+  const r = coverRect(img.width, img.height, cw, ch, t.focusX, t.focusY, t.zoom * m.scale, t.fit);
   ctx.drawImage(img.source, r.dx + pushX + m.panX, r.dy + pushY + m.panY, r.dw, r.dh);
 }
 
