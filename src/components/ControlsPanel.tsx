@@ -5,14 +5,18 @@ import {
   ArrowDown,
   ArrowUp,
   Blend,
+  Check,
   Circle,
   Columns3,
+  Link as LinkIcon,
   MoveHorizontal,
   Slash,
   SquareSplitHorizontal,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useProjectStore } from '../state/useProjectStore';
 import { ASPECT_PRESETS } from '../lib/presets';
+import { buildShareUrl } from '../lib/settings/shareConfig';
 import { EASING_LABELS } from '../lib/render/easing';
 import { ColorControl, Field, Segmented, SliderControl, Toggle } from './ui/Controls';
 import { ImageUploader } from './ImageUploader';
@@ -24,6 +28,7 @@ import type {
   EasingId,
   ImageTransform,
   LoopMode,
+  SliderConfig,
   TransitionId,
 } from '../types/project';
 
@@ -144,6 +149,39 @@ function CaptionSection({
           />
         </>
       )}
+    </Section>
+  );
+}
+
+/** Copy a shareable link that encodes the current settings in the URL. */
+function ShareSection({ config }: { config: SliderConfig }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    const url = buildShareUrl(config);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard blocked (e.g. insecure context): the URL bar already holds
+      // the link, so fall back to selecting it via a prompt.
+      window.prompt('Copy this link:', url);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+  return (
+    <Section title="Share">
+      <p className="-mt-1 text-[11px] leading-snug text-white/40">
+        Copy a link that reopens the app with these exact settings. (Images
+        aren&apos;t included — only the look.)
+      </p>
+      <button
+        type="button"
+        onClick={copy}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-ink-800 px-3 py-2.5 text-sm text-white/80 transition hover:border-white/25 hover:text-white"
+      >
+        {copied ? <Check size={15} /> : <LinkIcon size={15} />}
+        {copied ? 'Link copied' : 'Copy share link'}
+      </button>
     </Section>
   );
 }
@@ -434,6 +472,8 @@ export function ControlsPanel() {
           onChange={(background) => updateConfig({ background })}
         />
       </Section>
+
+      <ShareSection config={config} />
     </div>
   );
 }

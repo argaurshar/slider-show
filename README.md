@@ -11,6 +11,9 @@ leave your device; rendering and video encoding happen client-side.
   exactly what stays in frame, instead of a forced center-crop.
 - **Caption overlay** — optional text on the video, with top/center/bottom
   position, size, color, and a translucent backing bar; auto-shrinks to fit.
+- **Shareable settings** — every setting is encoded in the URL and saved to
+  localStorage, so a "Copy share link" reopens the app with the same look, and
+  your last session is restored on return. (Images aren't included — only the look.)
 - **Three transitions, your choice** — *reveal* (a divider line sweeps across to
   wipe image B over image A), *slide/push*, and *fade*.
 - **Every social format** — presets for 9:16, 1:1, 4:5, 16:9, 3:4, 2:3, all at a
@@ -90,4 +93,3 @@ tests/          coverRect, easing, sliderGeometry
 ## Roadmap
 
 - Background music track.
-- Shareable settings via URL params.
